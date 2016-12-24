@@ -1,0 +1,34 @@
+.chatroom {
+  .messages {
+    list-style-type: none;
+    margin: 5px;
+    padding: 0;
+    li {
+      padding: 5px 10px;
+      &:nth-child(odd) {
+        background: #eee;
+      }
+    }
+  }
+
+  .input-area {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+
+    &>div {
+      width: 100%;
+    }
+    text-align: center;
+
+    p {
+      display: inline-block;
+    }
+
+    .button {
+      clear: both;
+      display: block;
+      margin: 10px auto;
+    }
+  }
+}

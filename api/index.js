@@ -8,16 +8,29 @@ console.log('💻 listening on 5000');
 
 const roomDict ={};
 let newestRoomID = 0;
+let totalUserCount = 0;
 
 function transformRoomDict() {
-  return Object.keys(roomDict).map(d => ({
-    ID: roomDict[d].ID,
-    userCount: Object.keys(roomDict[d].socketDict).length
-  })).filter(d => d.userCount);
+  const rooms = Object.keys(roomDict).map(d => {
+    const userCount = Object.keys(roomDict[d].socketDict).length;
+    return {
+      ID: roomDict[d].ID,
+      userCount
+    }
+  }).filter(d => d.userCount);
+
+  return {
+    rooms,
+    totalUserCount
+  };
 }
+
+var idDic ={}
 
 io.on('connection', function (socket) {
   const socketID = uuid();
+  totalUserCount++;
+  idDic[socket.id] = true;
 
   let room;
   socket.on('room', function(data) {
@@ -30,7 +43,7 @@ io.on('connection', function (socket) {
       io.emit('update', {
         type: 'dashboard',
         value: transformRoomDict()
-      })
+      });
     }
 
     if (data.type === 'enter') {
@@ -54,12 +67,26 @@ io.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function() {
+    totalUserCount--;
+    console.log(totalUserCount);
     if (room) {
       delete room.socketDict[socketID];
       io.emit('update', {
         type: 'dashboard',
         value: transformRoomDict()
       });
+    } else {
+      io.emit('update', {
+        type: 'dashboard',
+        value: {totalUserCount}
+      });
     }
   });
+
+  socket.on('message', function({message, userName}) {
+    Object.keys(room.socketDict).forEach(d => {
+      const text = `${userName ? userName : 'Anonymous'}: ${message ? message : ''}`
+      room.socketDict[d].emit('message', text);
+    });
+  })
 });
