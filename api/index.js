@@ -1,29 +1,30 @@
-var app = require('http').createServer();
-var io = require('socket.io')(app);
-var fs = require('fs');
+const app = require('http').createServer();
+const io = require('socket.io')(app);
+const fs = require('fs');
+const uuid = require('uuid/v4');
 
 app.listen(5000);
 console.log('💻 listening on 5000');
 
-var roomDict ={};
-var newestRoomID = undefined;
+const roomDict ={};
+let newestRoomID = 0;
 
 function transformRoomDict() {
-  return Object.keys(roomDict).map(d => roomDict[d])
+  return Object.keys(roomDict).map(d => ({
+    ID: roomDict[d].ID,
+    userCount: Object.keys(roomDict[d].socketDict).length
+  })).filter(d => d.userCount);
 }
 
 io.on('connection', function (socket) {
-  console.log('a user connected...');
+  const socketID = uuid();
 
-  var room;
+  let room;
   socket.on('room', function(data) {
     if (data.type === 'create') {
-      if (newestRoomID === undefined) {
-        newestRoomID = 0;
-      }
       room = {
         ID: ++newestRoomID,
-        userCount: 1
+        socketDict: {[socketID]: socket}
       }
       roomDict[newestRoomID] = room;
       io.emit('update', {
@@ -33,12 +34,13 @@ io.on('connection', function (socket) {
     }
 
     if (data.type === 'enter') {
-      roomDict[data.ID].userCount ++;
+      room = roomDict[data.ID];
+      room.socketDict[socketID] = socket;
 
       io.emit('update', {
         type: 'dashboard',
         value: transformRoomDict()
-      })
+      });
     }
   });
 
@@ -47,7 +49,17 @@ io.on('connection', function (socket) {
       io.emit('data', {
         type: 'dashboard',
         value: transformRoomDict()
-      })
+      });
+    }
+  });
+
+  socket.on('disconnect', function() {
+    if (room) {
+      delete room.socketDict[socketID];
+      io.emit('update', {
+        type: 'dashboard',
+        value: transformRoomDict()
+      });
     }
   });
 });
