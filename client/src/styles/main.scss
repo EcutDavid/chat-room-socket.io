@@ -1,0 +1,23 @@
+.row {
+  height: 200px;
+
+  .room {
+    height: 130px;
+
+    article {
+      cursor: pointer;
+      text-align: center;
+      margin: 10px;
+      border: 2px solid #3e3e3e;
+      border-radius: 2px;
+      padding-top: 5px;
+    }
+  }
+}
+
+.button.submit-btn {
+  clear: both;
+  margin-top: 10px;
+  display: block;
+  margin: 0 auto;
+}
