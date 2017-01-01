@@ -1,9 +1,8 @@
-const app = require('http').createServer();
-const io = require('socket.io')(app);
+const io = require('socket.io')();
 const fs = require('fs');
 const uuid = require('uuid/v4');
 
-app.listen(5000);
+io.listen(5000);
 console.log('💻 listening on 5000');
 
 const roomDict ={};
